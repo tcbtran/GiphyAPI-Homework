@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+	<meta charset="UTF-8">
+	<title>GIFs Galore!</title>
+	<style type="text/css">
+		#travel-gifs {
+			float: left;
+			padding: 10px;
+			width: 100%;
+		}
+		#addGif {
+			float: right;
+			margin: 10px 20px;
+			width: 25%;
+		}
+		#gif-display{
+			float: left;
+		}
+		button {
+			border-radius: 8px;
+			background-color: #4CAF50;
+			font-size: 12px;
+			color: #ffffff;
+			padding: 10px 24px;
+			margin: 5px;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div class="container">
+		<!-- GIF buttons to be placed in this div -->
+		<div id="travel-gifs"></div>
+
+		<!-- GIF thumbnails to be placed in this div -->
+		<div id="gif-display"></div>
+
+		<form id="addGif">
+			<h3>Add a travel destination</h3>
+			<input type="text" name="search-bar" id="giphy-search">
+			<input type="submit" id="submit-button" value="Submit">
+		</form>
+
+	</div>
+
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+<script type="text/javascript">
+
+	var topics = ["Viet Nam", "Italy", "Hawaii", "Paris", "Africa", "New York City", "Tokyo", "Bahamas", "Barcelona", "San Francisco"];
+
+	// function to generate initial buttons on the page
+	function generateButtons() {
+
+		$("#travel-gifs").empty();
+
+		for (var i=0; i < topics.length; i++) {
+			var a = $("<button>");
+			a.addClass("destination");
+			a.attr("data-places", topics[i]);
+			a.text(topics[i]);
+			$("#travel-gifs").append(a);
+		}
+	}
+
+	// on click event to add buttons based on search and submit
+	$("#submit-button").on("click", function(event) {
+		event.preventDefault();
+		var topic = $("#giphy-search").val().trim();
+		topics.push(topic);
+		generateButtons();
+	});
+
+	generateButtons();
+
+	// on click event to perform AJAX call to GiphyAPI
+	$("#travel-gifs").on("click", "button", function() {
+
+		$("#gif-display").empty();
+
+		var destination = $(this).attr("data-places");
+		var limit = 10;
+		var rating = "pg-13";
+		var APIkey = "dc6zaTOxFJmzC";
+		var queryURL = "http://api.giphy.com/v1/gifs/search?q=" + destination + "&api_key=" + APIkey + "&rating=" + rating + "&limit=" + limit;
+
+		$.ajax({
+			url: queryURL,
+			method: "GET"
+		}).done(function(response) {
+
+			var results = response.data;
+
+			for (i=0; i < results.length; i++) {
+				var gifDiv = $("<div class='item'>");
+				var gifRating = results[i].rating;
+				var p = $("<p>").text("Rating: " + gifRating);
+				var gifImage = $("<img>");
+				gifImage.attr("src", results[i].images.fixed_height_still.url);
+				gifImage.attr("data-still", results[i].images.fixed_height_still.url);
+				gifImage.attr("data-animate", results[i].images.fixed_height_downsampled.url);
+				gifImage.attr("data-state", "still");
+				gifImage.addClass("gif");
+				gifDiv.prepend(p);
+				gifDiv.prepend(gifImage);
+
+				$("#gif-display").append(gifDiv);
+
+			}
+
+		});
+
+	});
+
+	$("#gif-display").on("click", ".gif", function() {
+
+		var gifState = $(this).attr("data-state");
+		if (gifState == "still") {
+			$(this).attr("src", $(this).attr("data-animate"));
+			$(this).attr("data-state", "animate");
+		}
+		else {
+			$(this).attr("src", $(this).attr("data-still"));
+			$(this).attr("data-state", "still");
+		}
+
+	});
+
+</script>
+
+</body>
+
+</html>
